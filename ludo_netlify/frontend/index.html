@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ludo Online 🎲</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/board.css">
+</head>
+<body>
+
+<!-- ═══ LOGIN PAGE ═══ -->
+<div id="page-auth" class="page active">
+  <div class="auth-page">
+    <div class="auth-card" id="loginCard">
+      <div class="auth-logo">
+        <span class="logo-icon">🎲</span>
+        <h1 class="logo-text">LUDO<span>ONLINE</span></h1>
+      </div>
+      <h2>Welcome Back!</h2>
+      <p class="auth-sub">Roll dice, move tokens, conquer the board.</p>
+      <div class="alert alert-error hidden" id="loginError"></div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="loginUser" placeholder="Enter username" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="Enter password" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()">🎮 Enter Game</button>
+      <p class="auth-switch">New player? <a href="#" onclick="showRegister()">Create Account →</a></p>
+    </div>
+
+    <div class="auth-card hidden" id="registerCard">
+      <div class="auth-logo">
+        <span class="logo-icon">🎲</span>
+        <h1 class="logo-text">LUDO<span>ONLINE</span></h1>
+      </div>
+      <h2>Create Account</h2>
+      <p class="auth-sub">Join the battle. Claim your throne.</p>
+      <div class="alert alert-error hidden" id="regError"></div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="regUser" placeholder="3-20 alphanumeric chars" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPass" placeholder="Min 6 characters" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="regPass2" placeholder="Repeat password" autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary btn-full" onclick="doRegister()">🚀 Join the Game</button>
+      <p class="auth-switch">Already playing? <a href="#" onclick="showLogin()">Sign In →</a></p>
+    </div>
+
+    <div class="auth-decoration">
+      <div class="floating-token" style="top:10%;left:5%;animation-delay:0s">🔴</div>
+      <div class="floating-token" style="top:20%;right:8%;animation-delay:0.5s">🔵</div>
+      <div class="floating-token" style="bottom:15%;left:10%;animation-delay:1s">🟢</div>
+      <div class="floating-token" style="bottom:25%;right:5%;animation-delay:1.5s">🟡</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LOBBY PAGE ═══ -->
+<div id="page-lobby" class="page">
+  <header class="lobby-header">
+    <div class="logo-small">🎲 <strong>LUDO ONLINE</strong></div>
+    <div class="user-info">
+      <span class="user-badge">👤 <span id="lobbyUsername"></span></span>
+      <span class="stat-badge">🏆 <span id="lobbyWins">0</span> wins</span>
+      <button class="btn btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </header>
+  <div class="lobby-content">
+    <div class="lobby-left">
+      <div class="panel">
+        <h2>🎮 Start Playing</h2>
+        <button class="btn btn-primary btn-full" onclick="createRoom()">➕ Create New Room</button>
+        <div class="divider"><span>or join with code</span></div>
+        <div class="join-form">
+          <input type="text" id="joinRoomInput" placeholder="Room Code (e.g. ABC123)" maxlength="6" style="text-transform:uppercase">
+          <button class="btn btn-secondary" onclick="joinRoomByCode()">Join →</button>
+        </div>
+        <div class="alert alert-error hidden" id="joinError"></div>
+      </div>
+      <div class="panel">
+        <h2>🌐 Open Rooms <button class="btn btn-xs btn-secondary" onclick="loadOpenRooms()" style="margin-left:8px">Refresh</button></h2>
+        <div id="openRoomsList"><p class="empty-state">Loading rooms...</p></div>
+      </div>
+    </div>
+    <div class="lobby-right">
+      <div class="panel leaderboard-panel">
+        <h2>🏆 Leaderboard</h2>
+        <table class="leaderboard-table">
+          <thead><tr><th>#</th><th>Player</th><th>Wins</th><th>Win%</th></tr></thead>
+          <tbody id="leaderboardBody"><tr><td colspan="4" class="empty-state">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GAME PAGE ═══ -->
+<div id="page-game" class="page">
+  <div class="game-page">
+    <div class="game-topbar">
+      <button class="btn btn-sm btn-back" onclick="leaveGame()">← Lobby</button>
+      <div class="room-badge">Room: <strong id="topRoomId"></strong></div>
+      <div class="turn-indicator">
+        <span class="turn-dot" id="turnDot"></span>
+        <span id="turnText">Waiting for players...</span>
+      </div>
+      <div class="user-badge-small" id="topUsername"></div>
+    </div>
+
+    <div class="game-layout">
+      <div class="side-panel left-panel">
+        <div class="player-card" id="panel-red">
+          <div class="player-color-dot red"></div>
+          <div class="player-card-info">
+            <span class="player-card-name">Red</span>
+            <span class="player-card-user">—</span>
+          </div>
+          <div class="player-tokens-mini" id="mini-red">
+            <span class="mini-token"></span><span class="mini-token"></span>
+            <span class="mini-token"></span><span class="mini-token"></span>
+          </div>
+        </div>
+        <div class="player-card" id="panel-blue">
+          <div class="player-color-dot blue"></div>
+          <div class="player-card-info">
+            <span class="player-card-name">Blue</span>
+            <span class="player-card-user">—</span>
+          </div>
+          <div class="player-tokens-mini" id="mini-blue">
+            <span class="mini-token"></span><span class="mini-token"></span>
+            <span class="mini-token"></span><span class="mini-token"></span>
+          </div>
+        </div>
+        <div class="chat-box">
+          <div class="chat-header">💬 Chat</div>
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="chat-input-row">
+            <input type="text" id="chatInput" placeholder="Say something..." maxlength="200">
+            <button id="chatSend" onclick="sendChat()">→</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="board-wrapper">
+        <div class="ludo-board" id="ludoBoard"></div>
+      </div>
+
+      <div class="side-panel right-panel">
+        <div class="player-card" id="panel-green">
+          <div class="player-color-dot green"></div>
+          <div class="player-card-info">
+            <span class="player-card-name">Green</span>
+            <span class="player-card-user">—</span>
+          </div>
+          <div class="player-tokens-mini" id="mini-green">
+            <span class="mini-token"></span><span class="mini-token"></span>
+            <span class="mini-token"></span><span class="mini-token"></span>
+          </div>
+        </div>
+        <div class="player-card" id="panel-yellow">
+          <div class="player-color-dot yellow"></div>
+          <div class="player-card-info">
+            <span class="player-card-name">Yellow</span>
+            <span class="player-card-user">—</span>
+          </div>
+          <div class="player-tokens-mini" id="mini-yellow">
+            <span class="mini-token"></span><span class="mini-token"></span>
+            <span class="mini-token"></span><span class="mini-token"></span>
+          </div>
+        </div>
+        <div class="dice-panel">
+          <div class="dice-display">
+            <div class="dice-face" id="diceFace">🎲</div>
+            <div class="dice-value" id="diceValue"></div>
+          </div>
+          <button class="btn btn-roll" id="rollBtn" disabled onclick="rollDice()">Roll Dice</button>
+          <div class="game-status" id="gameStatus">Waiting for players to join...</div>
+        </div>
+        <div class="move-history">
+          <div class="move-history-header">📜 History</div>
+          <div class="move-history-list" id="moveHistory"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Waiting Overlay -->
+    <div class="overlay" id="waitingOverlay">
+      <div class="overlay-card">
+        <div class="overlay-dice">🎲</div>
+        <h2>Room: <strong id="overlayRoomId"></strong></h2>
+        <p>Share this code with friends!</p>
+        <div class="room-code-big" id="roomCodeBig" onclick="copyRoomCode()"></div>
+        <p class="copy-hint">Click to copy</p>
+        <div class="waiting-players">
+          <div class="waiting-spinner"></div>
+          <span id="waitingText">Waiting for players... (0/2 minimum)</span>
+        </div>
+        <div class="players-preview" id="playersPreview"></div>
+      </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div class="overlay hidden" id="gameOverOverlay">
+      <div class="overlay-card">
+        <div class="winner-emoji" id="winnerEmoji">🏆</div>
+        <h2 id="gameOverTitle">Game Over!</h2>
+        <p id="gameOverMsg"></p>
+        <div class="game-over-btns">
+          <button class="btn btn-primary" onclick="leaveGame()">Back to Lobby</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+<script src="js/board.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
